@@ -4,7 +4,7 @@ __pycache__/
 *.pyo
 
 # Virtual environments
-myenv/
+myen/
 .env/
 
 # Django database file
