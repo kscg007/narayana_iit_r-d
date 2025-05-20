@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, OTP
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class SignupSerializer(serializers.Serializer):
     name = serializers.CharField()
@@ -11,7 +13,9 @@ class SignupSerializer(serializers.Serializer):
             raise serializers.ValidationError("Email must be @narayanagroup.com domain")
         # Check if user already exists
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("User with this email already exists")
+            raise serializers.ValidationError("User with this email already exists, Please login.")
+        if OTP.objects.filter(email=value, is_used=1):
+            raise serializers.ValidationError("User already initiated singup process and their email is verified, Try log in.")
         return value
 
 class OTPVerifySerializer(serializers.Serializer):
@@ -36,8 +40,15 @@ class LoginSerializer(serializers.Serializer):
     totp = serializers.CharField(required=False, write_only=True, max_length=6, allow_blank=True)
 
     def validate_email(self, value):
+        # 1. Check valid email format (redundant, but explicit)
+        try:
+            validate_email(value)
+        except DjangoValidationError:
+            raise serializers.ValidationError("Enter a valid email address.")
+
+        # 2. Check domain
         if not value.lower().endswith('@narayanagroup.com'):
-            raise serializers.ValidationError("Email must be @narayanagroup.com domain")
+            raise serializers.ValidationError("Email must be of @narayanagroup.com domain")
         return value
 
     def validate(self, data):
