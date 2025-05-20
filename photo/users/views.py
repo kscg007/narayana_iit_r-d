@@ -233,14 +233,14 @@ class LoginView(APIView):
                 key="access_token",
                 value=access_token,
                 httponly=True,
-                secure=True,  # Use HTTPS
+                secure=False,  # Use HTTPS
                 samesite="Strict",  # Prevent cross-site usage
             )
             response.set_cookie(
                 key="refresh_token",
                 value=str(refresh),
                 httponly=True,
-                secure=True,
+                secure=False,
                 samesite="Strict",
             )
             return response
@@ -280,14 +280,14 @@ class LoginView(APIView):
                     key="access_token",
                     value=access_token,
                     httponly=True,
-                    secure=True,  # Use HTTPS
+                    secure=False,  # Use HTTPS
                     samesite="Strict",
                 )
                 response.set_cookie(
                     key="refresh_token",
                     value=str(refresh),
                     httponly=True,
-                    secure=True,
+                    secure=False,
                     samesite="Strict",
                 )
                 return response
@@ -313,14 +313,14 @@ class LoginView(APIView):
                     key="access_token",
                     value=access_token,
                     httponly=True,
-                    secure=True,
+                    secure=False,
                     samesite="Strict",
                 )
                 response.set_cookie(
                     key="refresh_token",
                     value=str(refresh),
                     httponly=True,
-                    secure=True,
+                    secure=False,
                     samesite="Strict",
                 )
                 return response
