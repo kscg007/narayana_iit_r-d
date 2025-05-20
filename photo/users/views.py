@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, logout
+from django.contrib.auth.signals import user_logged_in
 
 
 from rest_framework import status
@@ -21,7 +22,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, OTP, PendingUser
-from .serializers import SignupSerializer, OTPVerifySerializer, SetPasswordSerializer, LoginSerializer, LoginOTPRequestSerializer, PasswordResetSerializer, GoogleAuthenticatorRegisterSerializer
+from .serializers import SignupSerializer, OTPVerifySerializer, SetPasswordSerializer, LoginSerializer, LoginOTPRequestSerializer, PasswordResetSerializer, GoogleAuthenticatorRegisterSerializer, DashboardSerializer
 
 
 logger = logging.getLogger('users')
@@ -222,6 +223,8 @@ class LoginView(APIView):
             # Update last_login here
             user.last_login = now()
             user.save(update_fields=['last_login'])
+            user_logged_in.send(sender=user.__class__, request=request, user=user)
+            
 
             # Generate tokens
             refresh = RefreshToken.for_user(user)
@@ -269,6 +272,7 @@ class LoginView(APIView):
                 # Update last_login here
                 user.last_login = now()
                 user.save(update_fields=['last_login'])
+                user_logged_in.send(sender=user.__class__, request=request, user=user)
 
                 # Generate tokens
                 refresh = RefreshToken.for_user(user)
@@ -304,6 +308,11 @@ class LoginView(APIView):
                 return Response({"error": "Google Authenticator is not registered for this user"}, status=status.HTTP_400_BAD_REQUEST)
             totp_obj = pyotp.TOTP(user.google_authenticator_secret)
             if totp_obj.verify(totp):
+                # Update last_login and fire signal
+                user.last_login = now()
+                user.save(update_fields=['last_login'])
+                user_logged_in.send(sender=user.__class__, request=request, user=user)
+                
                 # Generate tokens
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
@@ -426,14 +435,14 @@ class GoogleAuthenticatorRegisterView(APIView):
     permission_classes = [IsAuthenticated]  # Require the user to be authenticated
 
     def post(self, request):
+        serializer = GoogleAuthenticatorRegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
         email = request.user.email  # Use the authenticated user's email
 
-        # Fetch the user
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-
+        user = User.objects.get(email=email)
+    
         # Generate a secret key for Google Authenticator
         secret = pyotp.random_base32()
 
@@ -523,3 +532,16 @@ class ProtectedPageView(APIView):
 
     def get(self, request):
         return render(request, 'login.html')
+
+
+class DashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = DashboardSerializer(request.user)
+        # In the future, you can add more data to this response
+        return Response({
+            "user": serializer.data,
+            # "other_dashboard_data": ...,
+        })
+

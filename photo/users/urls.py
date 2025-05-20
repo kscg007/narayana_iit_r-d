@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import SignupView, OTPVerifyView, SetPasswordView, LoginView, LoginOTPRequestView, PasswordResetView, GoogleAuthenticatorRegisterView, GoogleAuthenticatorVerifyView, LogoutView, ProtectedPageView
+from .views import SignupView, OTPVerifyView, SetPasswordView, LoginView, LoginOTPRequestView, PasswordResetView, GoogleAuthenticatorRegisterView, GoogleAuthenticatorVerifyView, LogoutView, ProtectedPageView, DashboardView
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -20,7 +20,10 @@ urlpatterns = [
     path('google-auth/register/', GoogleAuthenticatorRegisterView.as_view(), name='google_auth_register'),
     path('google-auth/verify/', GoogleAuthenticatorVerifyView.as_view(), name='google_auth_verify'),
 
-    path('protected/', ProtectedPageView.as_view(), name='protected'),
+    # path('protected/', ProtectedPageView.as_view(), name='protected'),
+
+    path('dashboard/', DashboardView.as_view(), name="dashboard"),
+
 ]
 
     

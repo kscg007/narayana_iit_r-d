@@ -1,10 +1,10 @@
 from django.urls import path
-from .views import LandingView, LoginView, SignupView
+from .views import AboutView, ContactView
 
 app_name = "core"
 
 urlpatterns = [
-    path('', LandingView.as_view(), name='landing'),
-    # path('signup/', SignupView.as_view(), name = 'signup'),
-    # path('login/', LoginView.as_view(),name='login'),
+    # path('', LandingView.as_view(), name='landing'),
+    path('about/', AboutView.as_view(),name="about"),
+    path('contactus/',ContactView.as_view(),name="contactus"),
 ]

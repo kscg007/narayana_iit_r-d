@@ -111,3 +111,9 @@ class GoogleAuthenticatorRegisterSerializer(serializers.Serializer):
         if not User.objects.filter(email=value).exists():
             raise serializers.ValidationError("User not found")
         return value
+
+
+class DashboardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'name']
