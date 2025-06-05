@@ -219,6 +219,8 @@ class LoginView(APIView):
             user = authenticate(request, email=email, password=password)
             if user is None:
                 return Response({"error": "Incorrect password."}, status=status.HTTP_400_BAD_REQUEST)
+            if not user.is_active:
+                return Response({"error": "User account is inactive."}, status=status.HTTP_403_FORBIDDEN)
 
             # Update last_login here
             user.last_login = now()
@@ -263,11 +265,15 @@ class LoginView(APIView):
                     otp_obj.delete()
                 logger.error(f"Login OTP expired for {email}")
                 return Response({"error": "OTP expired. Please request a new OTP."}, status=status.HTTP_400_BAD_REQUEST)
+            
 
             with transaction.atomic():
                 otp_obj.is_used = True
                 otp_obj.save()
                 user = User.objects.get(email=email)
+
+                if not user.is_active:
+                    return Response({"error": "User account is inactive."}, status=status.HTTP_403_FORBIDDEN)
 
                 # Update last_login here
                 user.last_login = now()
@@ -304,6 +310,8 @@ class LoginView(APIView):
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            if not user.is_active:
+                return Response({"error": "User account is inactive."}, status=status.HTTP_403_FORBIDDEN)
             if not user.google_authenticator_secret:
                 return Response({"error": "Google Authenticator is not registered for this user"}, status=status.HTTP_400_BAD_REQUEST)
             totp_obj = pyotp.TOTP(user.google_authenticator_secret)

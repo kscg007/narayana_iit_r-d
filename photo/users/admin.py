@@ -22,7 +22,7 @@
 # admin.site.register(User, UserAdmin)
 
 
-from .models import User, OTP
+from .models import User, OTP, PendingUser
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
@@ -51,5 +51,12 @@ class OTPAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
 
 
+class PendingUserAdmin(admin.ModelAdmin):
+    list_display = ('email','name','otp_verified','created_at')
+    list_filter = ('otp_verified', 'created_at')
+    search_fields = ('email', 'name')
+    order = ('-created_at')
+
 admin.site.register(User, UserAdmin)
 admin.site.register(OTP, OTPAdmin)
+admin.site.register(PendingUser, PendingUserAdmin)
